@@ -1,6 +1,8 @@
-import { Archive, Shield, Lock } from 'lucide-react';
+import { Archive, Shield, Lock, Key } from 'lucide-react';
 import { FileZipper } from '@/components/FileZipper';
+import { ZipDecryptor } from '@/components/ZipDecryptor';
 import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Index = () => {
   return (
@@ -31,11 +33,11 @@ const Index = () => {
               </div>
             </div>
             <h2 className="text-4xl font-bold mb-4 text-foreground">
-              Compressez vos fichiers en toute sécurité
+              Chiffrement sécurisé de fichiers
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Créez facilement des archives ZIP protégées par mot de passe. 
-              Vos fichiers restent privés et sécurisés.
+              Créez des archives ZIP chiffrées avec encryption AES-256. 
+              Vos fichiers sont protégés par un chiffrement de niveau militaire.
             </p>
           </div>
 
@@ -45,9 +47,9 @@ const Index = () => {
               <div className="p-3 rounded-full bg-primary/10 w-fit mx-auto mb-3">
                 <Lock size={24} className="text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Protection par mot de passe</h3>
+              <h3 className="font-semibold mb-2">Chiffrement AES-256</h3>
               <p className="text-sm text-muted-foreground">
-                Sécurisez vos archives avec un mot de passe robuste
+                Chiffrement de niveau militaire pour une sécurité maximale
               </p>
             </Card>
 
@@ -65,15 +67,34 @@ const Index = () => {
               <div className="p-3 rounded-full bg-primary-glow/10 w-fit mx-auto mb-3">
                 <Shield size={24} className="text-primary-glow" />
               </div>
-              <h3 className="font-semibold mb-2">100% sécurisé</h3>
+              <h3 className="font-semibold mb-2">Chiffrement local</h3>
               <p className="text-sm text-muted-foreground">
-                Traitement local, vos fichiers ne quittent jamais votre appareil
+                Traitement local avec encryption côté client, zéro fuite de données
               </p>
             </Card>
           </div>
 
-          {/* File Zipper Component */}
-          <FileZipper />
+          {/* Main Application */}
+          <Tabs defaultValue="encrypt" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="encrypt" className="flex items-center space-x-2">
+                <Lock size={16} />
+                <span>Chiffrer</span>
+              </TabsTrigger>
+              <TabsTrigger value="decrypt" className="flex items-center space-x-2">
+                <Key size={16} />
+                <span>Déchiffrer</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="encrypt">
+              <FileZipper />
+            </TabsContent>
+
+            <TabsContent value="decrypt">
+              <ZipDecryptor />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>

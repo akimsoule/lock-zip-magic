@@ -77,8 +77,8 @@ export const FileZipper: React.FC = () => {
         downloadBlob(zipBlob, filename);
         
         toast({
-          title: "Archive créée avec succès",
-          description: `${filename} a été téléchargé`,
+          title: "Archive chiffrée créée avec succès",
+          description: `${filename} a été téléchargé avec encryption AES-256`,
         });
 
         // Reset form

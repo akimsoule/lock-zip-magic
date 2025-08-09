@@ -1,27 +1,54 @@
 import { zipSync, strToU8 } from 'fflate';
+import CryptoJS from 'crypto-js';
 
 export interface ZipFile {
   name: string;
   data: Uint8Array;
 }
 
+const encryptFile = (data: Uint8Array, password: string): Uint8Array => {
+  // Convert Uint8Array to base64 string for encryption
+  const dataString = btoa(String.fromCharCode(...data));
+  
+  // Encrypt with AES-256
+  const encrypted = CryptoJS.AES.encrypt(dataString, password, {
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  }).toString();
+  
+  // Convert back to Uint8Array
+  return strToU8(encrypted);
+};
+
 export const createPasswordProtectedZip = async (files: File[], password: string): Promise<Blob> => {
   const zipData: Record<string, Uint8Array> = {};
 
-  // Convert files to Uint8Array
+  // Encrypt each file with the password
   for (const file of files) {
     const arrayBuffer = await file.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
-    zipData[file.name] = uint8Array;
+    
+    // Encrypt the file data
+    const encryptedData = encryptFile(uint8Array, password);
+    zipData[`${file.name}.encrypted`] = encryptedData;
   }
 
-  // Add password as a comment (basic protection - in real world, you'd use proper encryption)
-  // Note: fflate doesn't support password protection natively
-  // We'll implement a basic obfuscation approach
-  const passwordHash = btoa(password);
-  zipData['.password'] = strToU8(passwordHash);
+  // Add a metadata file to indicate this is an encrypted archive
+  const metadata = {
+    encrypted: true,
+    algorithm: 'AES-256-CBC',
+    files: files.map(f => ({ 
+      originalName: f.name, 
+      encryptedName: `${f.name}.encrypted`,
+      size: f.size,
+      type: f.type
+    })),
+    createdAt: new Date().toISOString()
+  };
+  
+  zipData['__SECURE_METADATA__.json'] = strToU8(JSON.stringify(metadata, null, 2));
 
-  // Create the zip
+  // Create the zip with encrypted files
   const compressed = zipSync(zipData, {
     level: 6 // Compression level
   });
