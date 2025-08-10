@@ -38,13 +38,19 @@ export const createStandardZip = async (files: File[]): Promise<Blob> => {
 };
 
 const encryptFile = (data: Uint8Array, password: string): Uint8Array => {
-  // Convert Uint8Array to base64 string for encryption in chunks to avoid stack overflow
+  // Convert Uint8Array to base64 string for encryption in chunks to avoid memory issues
   let dataString = '';
-  const chunkSize = 8192; // Process 8KB at a time
+  const chunkSize = 1024; // Process 1KB at a time to avoid stack overflow
   
+  // Conversion plus sûre pour les gros fichiers
   for (let i = 0; i < data.length; i += chunkSize) {
     const chunk = data.slice(i, i + chunkSize);
-    dataString += String.fromCharCode(...chunk);
+    // Utilisation d'une boucle au lieu du spread operator pour éviter les erreurs de pile
+    let chunkString = '';
+    for (let j = 0; j < chunk.length; j++) {
+      chunkString += String.fromCharCode(chunk[j]);
+    }
+    dataString += chunkString;
   }
   
   const base64String = btoa(dataString);
@@ -66,13 +72,19 @@ const decryptFile = (encryptedData: Uint8Array, password: string): Uint8Array =>
       throw new Error('Données chiffrées vides');
     }
 
-    // Convert Uint8Array back to encrypted string in chunks to avoid stack overflow
+    // Convert Uint8Array back to encrypted string in chunks to avoid memory issues
     let encryptedString = '';
-    const chunkSize = 8192; // Process 8KB at a time
+    const chunkSize = 1024; // Process 1KB at a time
     
+    // Conversion plus sûre pour les gros fichiers
     for (let i = 0; i < encryptedData.length; i += chunkSize) {
       const chunk = encryptedData.slice(i, i + chunkSize);
-      encryptedString += String.fromCharCode(...chunk);
+      // Utilisation d'une boucle au lieu du spread operator
+      let chunkString = '';
+      for (let j = 0; j < chunk.length; j++) {
+        chunkString += String.fromCharCode(chunk[j]);
+      }
+      encryptedString += chunkString;
     }
     
     // Decrypt with AES-256

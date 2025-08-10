@@ -77,17 +77,32 @@ export const FileZipper: React.FC = () => {
       }
     }
 
-    // Vérification de la taille totale des fichiers
+    // Vérification de la taille totale des fichiers avec limite adaptée pour le chiffrement
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    const maxSize = 500 * 1024 * 1024; // 500MB limite
+    const maxSize = useEncryption ? 200 * 1024 * 1024 : 500 * 1024 * 1024; // 200MB pour chiffré, 500MB pour standard
     
     if (totalSize > maxSize) {
+      const limitText = useEncryption ? "200MB" : "500MB";
       toast({
         title: "Fichiers trop volumineux",
-        description: "La taille totale des fichiers ne peut pas dépasser 500MB",
+        description: `La taille totale des fichiers ne peut pas dépasser ${limitText} ${useEncryption ? "(limitation du chiffrement)" : ""}`,
         variant: "destructive",
       });
       return;
+    }
+
+    // Vérification de fichiers individuels pour le chiffrement (limite web)
+    if (useEncryption) {
+      const maxFileSize = 100 * 1024 * 1024; // 100MB par fichier pour le chiffrement web
+      const largeFile = files.find(file => file.size > maxFileSize);
+      if (largeFile) {
+        toast({
+          title: "Fichier trop volumineux",
+          description: `Le fichier "${largeFile.name}" (${(largeFile.size / 1024 / 1024).toFixed(1)}MB) dépasse la limite de 100MB pour le chiffrement`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsCreating(true);
@@ -177,7 +192,7 @@ export const FileZipper: React.FC = () => {
               <span className="font-medium">Mode sécurisé (chiffrement AES-256)</span>
             </div>
             <p className="text-sm text-muted-foreground mt-1 ml-6">
-              ⚠️ Nécessite cette application pour déchiffrer
+              ⚠️ Nécessite cette application pour déchiffrer (limite: 100MB par fichier)
             </p>
           </div>
 
