@@ -1,10 +1,13 @@
 import React from 'react';
-import { Key, Unlock, Download, AlertTriangle } from 'lucide-react';
+import { Key, Unlock, Download, AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useOperation } from '@/hooks/use-loading-hooks';
+import { InlineLoading } from '@/components/ui/loading';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { decryptPasswordProtectedZip, downloadBlob } from '@/utils/zipUtils';
 
 export const ZipDecryptor: React.FC = () => {
@@ -13,6 +16,9 @@ export const ZipDecryptor: React.FC = () => {
   const [isDecrypting, setIsDecrypting] = React.useState(false);
   const [decryptedFiles, setDecryptedFiles] = React.useState<File[]>([]);
   const { toast } = useToast();
+  
+  // Hook pour gérer le loading global
+  const decryptOperation = useOperation("Déchiffrement de l'archive");
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,6 +37,7 @@ export const ZipDecryptor: React.FC = () => {
     if (!selectedFile || !password) return;
 
     setIsDecrypting(true);
+    decryptOperation.startOperation();
     
     try {
       
@@ -48,8 +55,13 @@ export const ZipDecryptor: React.FC = () => {
         passwordLength: password.length
       });
 
+      // Progression simulée
+      decryptOperation.setProgress(25);
+
       // Déchiffrer l'archive ZIP
       const result = await decryptPasswordProtectedZip(selectedFile, password);
+      
+      decryptOperation.setProgress(90);
       
       console.log('Déchiffrement réussi:', {
         filesCount: result.files.length,
@@ -62,6 +74,8 @@ export const ZipDecryptor: React.FC = () => {
         title: "Déchiffrement réussi",
         description: `${result.files.length} fichier(s) déchiffré(s) avec succès`,
       });
+      
+      decryptOperation.finishOperation();
     } catch (error) {
       console.error('Erreur complète de déchiffrement:', error);
       console.error('Stack trace:', (error as Error).stack);
@@ -89,6 +103,8 @@ export const ZipDecryptor: React.FC = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      
+      decryptOperation.failOperation();
     } finally {
       setIsDecrypting(false);
     }
@@ -149,14 +165,16 @@ export const ZipDecryptor: React.FC = () => {
             </div>
           </Card>
 
-          <Button
+                    <LoadingButton
             onClick={handleDecrypt}
-            disabled={!selectedFile || !password || isDecrypting}
+            disabled={!selectedFile || !password}
+            isLoading={isDecrypting}
+            loadingText="Déchiffrement..."
+            icon={<Key size={16} />}
             className="w-full"
           >
-            <Key size={16} className="mr-2" />
-            {isDecrypting ? "Déchiffrement..." : "Déchiffrer l'archive"}
-          </Button>
+            Déchiffrer l'archive
+          </LoadingButton>
 
           {decryptedFiles.length > 0 && (
             <div className="mt-6 space-y-4">

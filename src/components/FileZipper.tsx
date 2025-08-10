@@ -5,6 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { useOperation } from '@/hooks/use-loading-hooks';
+import { InlineLoading } from '@/components/ui/loading';
+import { LoadingButton } from '@/components/ui/loading-button';
+import { PerformanceMetrics } from '@/components/ui/performance-metrics';
+import { OptimizationTip } from '@/components/ui/optimization-tip';
 import { FileDropZone } from './FileDropZone';
 import { FileList } from './FileList';
 import { PasswordInput } from './PasswordInput';
@@ -17,15 +22,57 @@ export const FileZipper: React.FC = () => {
   const [isCreating, setIsCreating] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
   const [useEncryption, setUseEncryption] = React.useState(true);
+  const [isProcessingFiles, setIsProcessingFiles] = React.useState(false);
   const { toast } = useToast();
+  
+  // Hook pour gérer le loading global
+  const zipOperation = useOperation(
+    useEncryption ? "Création de l'archive sécurisée" : "Création de l'archive ZIP"
+  );
+  const fileProcessingOperation = useOperation("Traitement des fichiers");
 
-  const handleFilesAdded = React.useCallback((newFiles: File[]) => {
-    setFiles(prev => [...prev, ...newFiles]);
-    toast({
-      title: "Fichiers ajoutés",
-      description: `${newFiles.length} fichier(s) ajouté(s) à la liste`,
-    });
-  }, [toast]);
+  const handleFilesAdded = React.useCallback(async (newFiles: File[]) => {
+    if (newFiles.length === 0) return;
+
+    // Si beaucoup de fichiers, afficher un loading
+    if (newFiles.length > 10) {
+      setIsProcessingFiles(true);
+      fileProcessingOperation.startOperation();
+      
+      // Traitement des fichiers par chunks pour éviter de bloquer l'UI
+      const chunkSize = 50;
+      const processedFiles: File[] = [];
+      
+      for (let i = 0; i < newFiles.length; i += chunkSize) {
+        const chunk = newFiles.slice(i, i + chunkSize);
+        processedFiles.push(...chunk);
+        
+        // Mise à jour du progrès
+        const progressPercent = Math.round(((i + chunk.length) / newFiles.length) * 100);
+        fileProcessingOperation.setProgress(progressPercent);
+        
+        // Permettre à l'UI de se mettre à jour
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+      
+      setFiles(prev => [...prev, ...processedFiles]);
+      
+      fileProcessingOperation.finishOperation();
+      setIsProcessingFiles(false);
+      
+      toast({
+        title: "Fichiers ajoutés",
+        description: `${newFiles.length} fichier(s) ajouté(s) avec succès`,
+      });
+    } else {
+      // Traitement normal pour peu de fichiers
+      setFiles(prev => [...prev, ...newFiles]);
+      toast({
+        title: "Fichiers ajoutés",
+        description: `${newFiles.length} fichier(s) ajouté(s) à la liste`,
+      });
+    }
+  }, [toast, fileProcessingOperation]);
 
   const handleRemoveFile = React.useCallback((index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
@@ -107,11 +154,16 @@ export const FileZipper: React.FC = () => {
 
     setIsCreating(true);
     setProgress(0);
+    zipOperation.startOperation();
 
     try {
       // Simulation du progrès pour une meilleure UX
       const progressInterval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 20, 90));
+        setProgress(prev => {
+          const newProgress = Math.min(prev + 20, 90);
+          zipOperation.setProgress(newProgress);
+          return newProgress;
+        });
       }, 200);
 
       let zipBlob: Blob;
@@ -126,6 +178,7 @@ export const FileZipper: React.FC = () => {
       
       clearInterval(progressInterval);
       setProgress(100);
+      zipOperation.setProgress(100);
 
       setTimeout(() => {
         const filename = generateZipFilename();
@@ -148,6 +201,7 @@ export const FileZipper: React.FC = () => {
         }
         setProgress(0);
         setIsCreating(false);
+        zipOperation.finishOperation();
       }, 500);
 
     } catch (error) {
@@ -159,16 +213,34 @@ export const FileZipper: React.FC = () => {
       });
       setIsCreating(false);
       setProgress(0);
+      zipOperation.failOperation();
     }
-  }, [files, password, confirmPassword, useEncryption, toast]);
+  }, [files, password, confirmPassword, useEncryption, toast, zipOperation]);
 
-  const canCreateZip = files.length > 0 && (!useEncryption || (password && password === confirmPassword)) && !isCreating;
+  const canCreateZip = files.length > 0 && (!useEncryption || (password && password === confirmPassword)) && !isCreating && !isProcessingFiles;
 
   return (
     <div className="space-y-6">
-      <FileDropZone onFilesAdded={handleFilesAdded} />
+      <FileDropZone 
+        onFilesAdded={handleFilesAdded} 
+        disabled={isCreating || isProcessingFiles}
+      />
       
       <FileList files={files} onRemoveFile={handleRemoveFile} />
+      
+      {/* Métriques de performance */}
+      <PerformanceMetrics 
+        fileCount={files.length}
+        totalSize={files.reduce((sum, file) => sum + file.size, 0)}
+        isProcessing={isProcessingFiles || isCreating}
+      />
+
+      {/* Conseils d'optimisation */}
+      <OptimizationTip 
+        fileCount={files.length}
+        totalSize={files.reduce((sum, file) => sum + file.size, 0)}
+        className="space-y-2"
+      />
       
       {/* Sélecteur de mode */}
       <Card className="p-4">
@@ -242,42 +314,34 @@ export const FileZipper: React.FC = () => {
 
       {isCreating && (
         <Card className="p-4">
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <Loader2 size={20} className="animate-spin text-primary" />
-              <span className="font-medium">Création de l'archive en cours...</span>
-            </div>
-            <Progress value={progress} className="w-full" />
-          </div>
+          <InlineLoading 
+            isLoading={isCreating} 
+            text="Création de l'archive en cours..." 
+            progress={progress}
+            size="md"
+          />
+          <Progress value={progress} className="w-full mt-3" />
         </Card>
       )}
 
       <div className="flex justify-center">
-        <Button
+        <LoadingButton
           onClick={handleCreateZip}
           disabled={!canCreateZip}
+          isLoading={isCreating}
+          loadingText="Création en cours..."
           size="lg"
+          icon={<Archive size={20} />}
           className={cn(
             useEncryption 
               ? "bg-security-gradient text-primary-foreground font-semibold px-8 py-3 hover:shadow-glow-primary" 
               : "bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3",
-            "transition-all duration-300",
-            "disabled:opacity-50 disabled:cursor-not-allowed"
+            "transition-all duration-300"
           )}
         >
-          {isCreating ? (
-            <>
-              <Loader2 size={20} className="mr-2 animate-spin" />
-              Création en cours...
-            </>
-          ) : (
-            <>
-              <Archive size={20} className="mr-2" />
-              {useEncryption ? "Créer l'archive sécurisée" : "Créer l'archive ZIP"}
-              {useEncryption && <Shield size={16} className="ml-2" />}
-            </>
-          )}
-        </Button>
+          {useEncryption ? "Créer l'archive sécurisée" : "Créer l'archive ZIP"}
+          {useEncryption && <Shield size={16} className="ml-2" />}
+        </LoadingButton>
       </div>
     </div>
   );
