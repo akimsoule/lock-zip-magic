@@ -1,73 +1,106 @@
-# Welcome to your Lovable project
+# SecureZip - Chiffrement sécurisé de fichiers
 
-## Project info
+Application web moderne pour chiffrer et compresser des fichiers avec un chiffrement AES-256 de niveau militaire.
 
-**URL**: https://lovable.dev/projects/7fbe79ee-3c76-459e-8771-574a4ac94ca4
+## 🔐 Fonctionnalités
 
-## How can I edit this code?
+- **Chiffrement AES-256** : Protection de niveau militaire pour vos fichiers
+- **Compression efficace** : Réduction de la taille sans perte de qualité  
+- **Traitement local** : Aucune donnée n'est envoyée sur internet
+- **Interface intuitive** : Drag & drop, validation en temps réel
+- **Déchiffrement intégré** : Récupération complète des fichiers originaux
 
-There are several ways of editing your application.
+## 🚀 Installation
 
-**Use Lovable**
+```bash
+# Cloner le repository
+git clone <repository-url>
+cd lock-zip-magic
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/7fbe79ee-3c76-459e-8771-574a4ac94ca4) and start prompting.
+# Installer les dépendances
+npm install
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Lancer en mode développement
 npm run dev
+
+# Build pour la production
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+## 🛠️ Technologies utilisées
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **React 18** avec TypeScript
+- **Vite** pour le build et le développement
+- **Tailwind CSS** pour le styling
+- **shadcn/ui** pour les composants UI
+- **crypto-js** pour le chiffrement AES-256
+- **fflate** pour la compression ZIP
 
-**Use GitHub Codespaces**
+## 🔒 Sécurité
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Chiffrement AES-256-CBC
+- Traitement entièrement côté client
+- Validation de force des mots de passe
+- Gestion sécurisée de la mémoire
 
-## What technologies are used for this project?
+## 📱 Utilisation
 
-This project is built with:
+1. **Chiffrer des fichiers :**
+   - Glissez-déposez vos fichiers dans la zone prévue
+   - Créez un mot de passe fort (minimum 8 caractères avec majuscules, minuscules, chiffres)
+   - Téléchargez votre archive ZIP chiffrée
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. **Déchiffrer une archive :**
+   - Sélectionnez votre archive ZIP chiffrée
+   - Entrez le mot de passe utilisé lors du chiffrement
+   - Téléchargez vos fichiers originaux
 
-## How can I deploy this project?
+## 🏗️ Structure du projet
 
-Simply open [Lovable](https://lovable.dev/projects/7fbe79ee-3c76-459e-8771-574a4ac94ca4) and click on Share -> Publish.
+```
+src/
+├── components/          # Composants React
+│   ├── FileDropZone.tsx # Zone de glisser-déposer
+│   ├── FileList.tsx     # Liste des fichiers
+│   ├── FileZipper.tsx   # Composant de chiffrement
+│   ├── PasswordInput.tsx # Gestion des mots de passe
+│   ├── ZipDecryptor.tsx # Composant de déchiffrement
+│   └── ui/             # Composants UI réutilisables
+├── pages/              # Pages de l'application
+├── utils/              # Utilitaires (chiffrement, ZIP)
+└── hooks/              # Hooks React personnalisés
+```
 
-## Can I connect a custom domain to my Lovable project?
+## 🧪 Tests
 
-Yes, you can!
+```bash
+# Lancer les tests
+npm run test
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Tests avec coverage
+npm run test:coverage
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 📦 Build et déploiement
+
+```bash
+# Build de production
+npm run build
+
+# Prévisualiser le build
+npm run preview
+```
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à :
+
+1. Fork le projet
+2. Créer une branche pour votre feature
+3. Commiter vos changements
+4. Pousser vers la branche
+5. Ouvrir une Pull Request
+
+## 📄 Licence
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.

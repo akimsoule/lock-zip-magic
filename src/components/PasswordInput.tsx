@@ -25,6 +25,28 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
   const passwordsMatch = password && confirmPassword && password === confirmPassword;
   const passwordsDontMatch = password && confirmPassword && password !== confirmPassword;
 
+  // Validation de force du mot de passe
+  const getPasswordStrength = (pwd: string) => {
+    let strength = 0;
+    if (pwd.length >= 8) strength++;
+    if (/[A-Z]/.test(pwd)) strength++;
+    if (/[a-z]/.test(pwd)) strength++;
+    if (/[0-9]/.test(pwd)) strength++;
+    if (/[^A-Za-z0-9]/.test(pwd)) strength++;
+    return strength;
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+  const getStrengthText = (strength: number) => {
+    if (strength < 2) return { text: "Très faible", color: "text-red-500" };
+    if (strength < 3) return { text: "Faible", color: "text-orange-500" };
+    if (strength < 4) return { text: "Moyen", color: "text-yellow-500" };
+    if (strength < 5) return { text: "Fort", color: "text-green-500" };
+    return { text: "Très fort", color: "text-green-600" };
+  };
+
+  const strengthInfo = getStrengthText(passwordStrength);
+
   return (
     <Card className="p-4">
       <div className="space-y-4">
@@ -54,6 +76,29 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </Button>
           </div>
+          
+          {password && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span>Force du mot de passe:</span>
+                <span className={strengthInfo.color}>{strengthInfo.text}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div 
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    passwordStrength < 2 ? 'bg-red-500 w-1/5' :
+                    passwordStrength < 3 ? 'bg-orange-500 w-2/5' :
+                    passwordStrength < 4 ? 'bg-yellow-500 w-3/5' :
+                    passwordStrength < 5 ? 'bg-green-500 w-4/5' :
+                    'bg-green-600 w-full'
+                  }`}
+                />
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Utilisez au moins 8 caractères avec majuscules, minuscules, chiffres et symboles
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">

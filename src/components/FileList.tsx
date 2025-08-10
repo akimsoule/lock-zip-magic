@@ -23,14 +23,24 @@ const formatFileSize = (bytes: number): string => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 };
 
+const getTotalSize = (files: File[]): string => {
+  const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+  return formatFileSize(totalBytes);
+};
+
 export const FileList: React.FC<FileListProps> = ({ files, onRemoveFile }) => {
   if (files.length === 0) return null;
 
   return (
     <Card className="p-4">
-      <h3 className="font-semibold mb-3 text-foreground">
-        Fichiers sélectionnés ({files.length})
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-foreground">
+          Fichiers sélectionnés ({files.length})
+        </h3>
+        <div className="text-sm text-muted-foreground">
+          Taille totale: {getTotalSize(files)}
+        </div>
+      </div>
       
       <div className="space-y-2 max-h-60 overflow-y-auto">
         {files.map((file, index) => {

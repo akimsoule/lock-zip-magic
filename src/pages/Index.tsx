@@ -10,9 +10,9 @@ const Index = () => {
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-lg bg-security-gradient">
-              <Archive size={24} className="text-white" />
+          <div className="flex items-center space-x-2">
+            <div className="p-2 rounded-lg">
+              <img src="/logo.png" alt="SecureZip Logo" className="w-10 h-10" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">SecureZip</h1>
@@ -33,11 +33,11 @@ const Index = () => {
               </div>
             </div>
             <h2 className="text-4xl font-bold mb-4 text-foreground">
-              Chiffrement sécurisé de fichiers
+              Compression et chiffrement de fichiers
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Créez des archives ZIP chiffrées avec encryption AES-256. 
-              Vos fichiers sont protégés par un chiffrement de niveau militaire.
+              Créez des archives ZIP classiques ou sécurisées avec chiffrement AES-256. 
+              Choisissez le mode qui convient à vos besoins.
             </p>
           </div>
 
@@ -57,9 +57,9 @@ const Index = () => {
               <div className="p-3 rounded-full bg-accent/10 w-fit mx-auto mb-3">
                 <Archive size={24} className="text-accent" />
               </div>
-              <h3 className="font-semibold mb-2">Compression efficace</h3>
+              <h3 className="font-semibold mb-2">ZIP standard</h3>
               <p className="text-sm text-muted-foreground">
-                Réduisez la taille de vos fichiers sans perte de qualité
+                Compatible avec tous les logiciels (WinRAR, 7-Zip, etc.)
               </p>
             </Card>
 
@@ -67,27 +67,27 @@ const Index = () => {
               <div className="p-3 rounded-full bg-primary-glow/10 w-fit mx-auto mb-3">
                 <Shield size={24} className="text-primary-glow" />
               </div>
-              <h3 className="font-semibold mb-2">Chiffrement local</h3>
+              <h3 className="font-semibold mb-2">Chiffrement AES-256</h3>
               <p className="text-sm text-muted-foreground">
-                Traitement local avec encryption côté client, zéro fuite de données
+                Protection maximale, nécessite cette application pour déchiffrer
               </p>
             </Card>
           </div>
 
           {/* Main Application */}
-          <Tabs defaultValue="encrypt" className="w-full">
+          <Tabs defaultValue="compress" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="encrypt" className="flex items-center space-x-2">
-                <Lock size={16} />
-                <span>Chiffrer</span>
+              <TabsTrigger value="compress" className="flex items-center space-x-2">
+                <Archive size={16} />
+                <span>Créer une archive</span>
               </TabsTrigger>
               <TabsTrigger value="decrypt" className="flex items-center space-x-2">
                 <Key size={16} />
-                <span>Déchiffrer</span>
+                <span>Déchiffrer (mode sécurisé)</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="encrypt">
+            <TabsContent value="compress">
               <FileZipper />
             </TabsContent>
 
