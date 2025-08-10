@@ -1,10 +1,15 @@
-const { app, BrowserWindow, shell } = require('electron');
-const path = require('path');
+import { app, BrowserWindow, shell } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const isDev = process.env.NODE_ENV === 'development';
 
 // Activer le live reload pour Electron en développement
 if (isDev) {
-  require('electron-reload')(__dirname, {
+  const { default: electronReload } = await import('electron-reload');
+  electronReload(__dirname, {
     electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
     hardResetMethod: 'exit'
   });
