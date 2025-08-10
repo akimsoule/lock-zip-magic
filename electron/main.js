@@ -6,16 +6,50 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const isDev = process.env.NODE_ENV === 'development';
 
-// Activer le live reload pour Electron en développement
-if (isDev) {
-  const { default: electronReload } = await import('electron-reload');
-  electronReload(__dirname, {
-    electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
-    hardResetMethod: 'exit'
-  });
+let localServer = null;
+
+async function setupElectronReload() {
+  // Activer le live reload pour Electron en développement seulement
+  if (isDev) {
+    try {
+      const { default: electronReload } = await import('electron-reload');
+      electronReload(__dirname, {
+        electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
+        hardResetMethod: 'exit'
+      });
+    } catch (error) {
+      console.log('electron-reload not available:', error.message);
+    }
+  }
 }
 
-function createWindow() {
+async function setupLocalServer() {
+  if (!isDev) {
+    try {
+      const express = (await import('express')).default;
+      const serveStatic = (await import('serve-static')).default;
+      
+      const app = express();
+      const distPath = path.join(__dirname, '../dist');
+      
+      app.use(serveStatic(distPath));
+      
+      return new Promise((resolve) => {
+        localServer = app.listen(0, 'localhost', () => {
+          const port = localServer.address().port;
+          console.log(`Local server running on http://localhost:${port}`);
+          resolve(`http://localhost:${port}`);
+        });
+      });
+    } catch (error) {
+      console.error('Failed to start local server:', error);
+      return null;
+    }
+  }
+  return null;
+}
+
+async function createWindow() {
   // Créer la fenêtre du navigateur
   const mainWindow = new BrowserWindow({
     width: 1200,
@@ -34,10 +68,18 @@ function createWindow() {
   });
 
   // Charger l'application
-  const startUrl = isDev 
-    ? 'http://localhost:5173' 
-    : `file://${path.join(__dirname, '../dist/index.html')}`;
+  let startUrl;
+  if (isDev) {
+    startUrl = 'http://localhost:5173';
+  } else {
+    // En production, démarrer un serveur local pour servir les fichiers
+    const serverUrl = await setupLocalServer();
+    startUrl = serverUrl || `file://${path.join(__dirname, '../dist/index.html')}`;
+  }
   
+  console.log('Loading URL:', startUrl);
+  console.log('Current directory:', __dirname);
+  console.log('Is development:', isDev);
   mainWindow.loadURL(startUrl);
 
   // Afficher la fenêtre quand elle est prête
@@ -58,12 +100,27 @@ function createWindow() {
 }
 
 // Cette méthode sera appelée quand Electron aura terminé son initialisation
-app.whenReady().then(createWindow);
+app.whenReady().then(async () => {
+  await setupElectronReload();
+  createWindow();
+});
 
 // Quitter quand toutes les fenêtres sont fermées, sauf sur macOS
 app.on('window-all-closed', () => {
+  // Fermer le serveur local si il existe
+  if (localServer) {
+    localServer.close();
+  }
+  
   if (process.platform !== 'darwin') {
     app.quit();
+  }
+});
+
+app.on('before-quit', () => {
+  // Fermer le serveur local avant de quitter
+  if (localServer) {
+    localServer.close();
   }
 });
 
